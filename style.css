@@ -1,0 +1,28 @@
+#container {
+    display: flex;
+    justify-content: center;
+}
+
+.post-block {
+    width: 50vw;
+
+}
+
+img.post-image {
+    width: 100%;
+}
+
+div.post-footer {
+    display: flex;
+}
+
+span.post-meta,
+span.post-score {
+    display: block;
+    flex: 1;
+    font-size: 75%;
+}
+
+header {
+    width: 100%;
+}
