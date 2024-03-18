@@ -7,9 +7,31 @@ if(!empty($_POST)) {
     //zdefiniuj folder docelowy
     $targetDirectory = "img/";
     //użyje orginalnej nazwy pliku 
-    $fileName = $_FILES['file'] ['name'];
-    //przesuń plik z lokazlizacji 
-    move_uploaded_file($_FILES['file']['tmp_name'], $targetDirectory.$fileName);
+    //$fileName = $_FILES['file'] ['name'];
+    //modyfikacja użyj shahs256
+    $fileName = hash('sha256', $FILES['file']['name'].microtime());
+    //przesuń plik z lokazlizacji tymczasowej do docelowej 
+    //move_uploaded_file($_FILES['file']['tmp_name'], $targetDirectory.$fileName);
+    //zmiana - użyj imagewebp do zapisania
+
+    //po 1!: wczytaj 
+    $gdImage = imagecreatefromgd($_FILES['file']['tmp_name']);
+
+    //przygotuj pełny url pliku
+    $finalUrl - "http://localhost/cms/img/" .$fileName.".webp.";
+
+    //po 2! 
+    imagewebp($gdImage, $finalUrl);
+
+    //dopisz posta do bazy
+    $authorID = 1;
+    $imageUrl = "localhost/cms/img" . $fileName;
+
+    $db = new mysqli('localhost' , 'root' , '' ,'cms');
+    $q = $db->prepare("INSERT INTO post (author, imgUrl, title) VALUES (?,?,?)");
+    //pierwszy atrybut jest liczba ,dwa pozostałe tekstem wiec integer
+    $q->bind_param("iss", $authorID, $imageUrl, $postTitle);
+    $q->execute();
 }
 ?>
 
