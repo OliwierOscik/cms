@@ -1,11 +1,19 @@
+<?php if(isset($_REQUEST['email']))  ?>
+
 <?php
 
 $email = $_REQUEST['email'];
+if($_REQUEST['password'] != $_REQUEST['passwordRepeat'])
+die("Hasła niezgodne");
 $password = $_REQUEST['password'];
+$passwordHash = password_hash($passwd, PASSWORD_ARGON2I);
 
 $email = filter_var($email, FILTER_SANITIZE_EMAIL);
 
 $db = new mysqli("localhost", "root" , "", "bazazcms");
+
+$sql = "INSERT INTO user (email, password) VALUES (?, ?)";
+$q = $db->prepare($sql);
 //ręcznie
 //$q = "SELECT * FROM user WHERE email = '$email'";
 //$db->query("SELECT * FROM user WHERE email = '$email");
@@ -13,11 +21,17 @@ $db = new mysqli("localhost", "root" , "", "bazazcms");
 
 //auto
 $q = $db->prepare("SELECT * FROM user email = ? LIMIT 1");
-$q->bind_param("s", $email);
-$q->execute();
-$result = $q->get_result();
+$q->bind_param("s", $email , $passwordHash);
+$success = $q->execute();
+if(!$success)
+    die("Bład przy próbie założenia konta");
 
-$userRow = $result->fetch_assoc();
+//$q->execute();
+//$result = $q->get_result();
+//
+//$userRow = $result->fetch_assoc();
+//if($userRow == null)
+//var_dump($userRow);
 
 
 //inny rodzaj polaczenia 
