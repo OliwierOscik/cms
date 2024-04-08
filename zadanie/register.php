@@ -1,3 +1,11 @@
+<?php
+//włącz obsługę sesji w tym pliku
+session_start();
+//zaimportuj definicje klasy
+require("./class/User.class.php");
+?>
+
+
 <?php if(isset($_REQUEST['email']))  ?>
 
 <?php
@@ -20,7 +28,7 @@ $q = $db->prepare($sql);
 //echo $q;
 
 //auto
-$q = $db->prepare("SELECT * FROM user email = ? LIMIT 1");
+$q = $db->prepare("SELECT * FROM user WHERE email = ? LIMIT 1");
 $q->bind_param("s", $email , $passwordHash);
 $success = $q->execute();
 if(!$success)
@@ -43,7 +51,7 @@ if(!$success)
 
 ?>
 
-<form action="index2.php" method="get">
+<form action="register.php" method="get">
     <label for="emailInput">Email:</label>
     <input type="email" name="email" id="emailInput">
     <label for="passwordInput">Hasło:</label>
