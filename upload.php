@@ -1,36 +1,43 @@
 <?php
 if(!empty($_POST)) {
-    //cos poszlo postem
-    $postTitle = $_POST['postTtile'];
+    //coś przyszło postem
+    $postTitle = $_POST['postTitle'];
     $postDescription = $_POST['postDescription'];
-    //wgrywanie pliku 
+    //wgrywanie pliku
     //zdefiniuj folder docelowy
     $targetDirectory = "img/";
-    //użyje orginalnej nazwy pliku 
-    //$fileName = $_FILES['file'] ['name'];
-    //modyfikacja użyj shahs256
-    $fileName = hash('sha256', $FILES['file']['name'].microtime());
-    //przesuń plik z lokazlizacji tymczasowej do docelowej 
+    //użyj oryginalnej nazwy pliku
+    //$fileName = $_FILES['file']['name'];
+    //modyfikacja - użyj sha256
+    $fileName = hash('sha256', $_FILES['file']['name'].microtime());
+    
+    //przesuń plik z lokalizacji tymczasowej do docelowej
     //move_uploaded_file($_FILES['file']['tmp_name'], $targetDirectory.$fileName);
     //zmiana - użyj imagewebp do zapisania
 
-    //po 1!: wczytaj 
-    $gdImage = imagecreatefromgd($_FILES['file']['tmp_name']);
+    //po 0!: wczytaj zawartość pliku graficznego do stringa
+    $fileString = file_get_contents($_FILES['file']['tmp_name']);
+
+    //po 1!: wczytaj otrzymany z formularza obrazek używając biblioteki GD do obiektu klasy GDImage
+    $gdImage = imagecreatefromstring($fileString);
 
     //przygotuj pełny url pliku
-    $finalUrl - "http://localhost/cms/img/" .$fileName.".webp.";
+    $finalUrl = "http://localhost/cms/img/".$fileName.".webp";
+    //imagewebp nie umie z http - link wewnętrzny
+    $internalUrl = "img/".$fileName.".webp";
 
-    //po 2! 
-    imagewebp($gdImage, $finalUrl);
+    //po 2!: zapisz obraz skonwertowany do webp pod nową nazwą pliku + rozszerzenie webp
+    imagewebp($gdImage, $internalUrl);
 
     //dopisz posta do bazy
+    //tymczasowo - authorID
     $authorID = 1;
-    $imageUrl = "localhost/cms/img" . $fileName;
 
-    $db = new mysqli('localhost' , 'root' , '' ,'cms');
-    $q = $db->prepare("INSERT INTO post (author, imgUrl, title) VALUES (?,?,?)");
-    //pierwszy atrybut jest liczba ,dwa pozostałe tekstem wiec integer
-    $q->bind_param("iss", $authorID, $imageUrl, $postTitle);
+
+    $db = new mysqli('localhost', 'root', '', 'bazazcms');
+    $q = $db->prepare("INSERT INTO post (author, imgUrl, title) VALUES (?, ?, ?)");
+    //pierwszy atrybut jest liczba, dwa pozostale tekstem wiec integer string string
+    $q->bind_param("iss", $authorID, $finalUrl, $postTitle);
     $q->execute();
 }
 ?>
@@ -43,7 +50,7 @@ if(!empty($_POST)) {
     <title>Dodaj nowy post</title>
 </head>
 <body>
-    <from action="upload.php" method="post" encttype="multipart/from-data">
+    <form action="upload.php" method="post" enctype="multipart/form-data">
         <label for="postTitleInput">Tytuł posta:</label>
         <input type="text" name="postTitle" id="postTitleInput">
         <br>
@@ -54,5 +61,6 @@ if(!empty($_POST)) {
         <input type="file" name="file" id="fileInput">
         <br>
         <input type="submit" value="Wyślij!">
+    </form>
 </body>
 </html>

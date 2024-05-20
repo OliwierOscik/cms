@@ -1,60 +1,69 @@
 <?php
 //włącz obsługę sesji w tym pliku
 session_start();
-//zaimportuj definicje klasy
-require("./class/User.class.php");
+//zaimportuj definicję klasy
+//require wymaga zaimportowania - wykrzaczy skrypt jeśli nie uda się zaimportować
+require("./class/user.class.php");
 ?>
-
-
-<?php if(isset($_REQUEST['email']))  ?>
-
-<?php
-
-$email = $_REQUEST['email'];
-if($_REQUEST['password'] != $_REQUEST['passwordRepeat'])
-die("Hasła niezgodne");
-$password = $_REQUEST['password'];
-$passwordHash = password_hash($passwd, PASSWORD_ARGON2I);
-
-$email = filter_var($email, FILTER_SANITIZE_EMAIL);
-
-$db = new mysqli("localhost", "root" , "", "bazazcms");
-
-$sql = "INSERT INTO user (email, password) VALUES (?, ?)";
-$q = $db->prepare($sql);
-//ręcznie
-//$q = "SELECT * FROM user WHERE email = '$email'";
-//$db->query("SELECT * FROM user WHERE email = '$email");
-//echo $q;
-
-//auto
-$q = $db->prepare("SELECT * FROM user WHERE email = ? LIMIT 1");
-$q->bind_param("s", $email , $passwordHash);
-$success = $q->execute();
-if(!$success)
-    die("Bład przy próbie założenia konta");
-
-//$q->execute();
-//$result = $q->get_result();
-//
-//$userRow = $result->fetch_assoc();
-//if($userRow == null)
-//var_dump($userRow);
-
-
-//inny rodzaj polaczenia 
-//$d = mysqli_connect("localhost", "root" , "", "bazazcms");
-
-//$passwd = "tajneHaslo";
-//$hash = password_hash($passwd,PASSWORD_ARGON2I);
-//echo $hash;
-
-?>
-
-<form action="register.php" method="get">
-    <label for="emailInput">Email:</label>
-    <input type="email" name="email" id="emailInput">
-    <label for="passwordInput">Hasło:</label>
-    <input type="password" name="password" id="passwordInput">
-    <input type="submit" value="Zaloguj">
-</form>
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rejestracja nowego użytkownika</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" 
+        rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" 
+        crossorigin="anonymous">
+</head>
+<body>
+    
+    <div class="container">
+        <?php if(isset($_REQUEST['submit'])) : ?>
+            <!-- Jeśli został wysłany formularz to... -->
+            <?php
+            //użyj metody z klasy
+            //dostaniemy do $result true lub false jeśli się uda lub nie
+            $result = User::Register($_REQUEST['email'], $_REQUEST['password']);            
+            ?>
+        <div class="row mt-5">
+            <div class="col-6 offset-3">
+                <h1 class="text-center">
+                    <?php 
+                        if($result)
+                            echo "Udało się założyć konto";
+                        else
+                            echo "Nastąpił błąd podczas zakładania konta";
+                    ?>
+                </h1>
+                <div class="text-center">
+                <a href="index.php">Powrót do strony</a>
+                </div>
+            </div>
+        </div>
+        <?php else : ?>
+            <!-- Jeśli nie został jeszcze wysłany formularz to... -->
+        <div class="row mt-5">
+            <div class="col-6 offset-3">
+                <h1 class="text-center">Rejestracja użytkownika</h1>
+                <form action="register.php" method="post">
+                    <label class="form-label mt-3" for="emailInput">Adres e-mail:</label>
+                    <input class="form-control mb-1" type="email" id="emailInput" name="email" required>
+                    <label class="form-label mt-3" for="passwordInput">Hasło:</label>
+                    <input class="form-control mb-1" type="password" id="passwordInput" name="password" required>
+                    <label class="form-label mt-3" for="passwordInputRepeat">Hasło (ponownie):</label>
+                    <input class="form-control mb-1" type="password" id="passwordInputRepeat" name="passwordRepeat" required>
+                    <button type="submit" class="btn btn-primary w-100 mt-3" name="submit">Zarejestruj</button>
+                </form>
+                <a href="login.php">
+                    <button class="btn btn-primary w-100 mt-3" name="submit">Zaloguj się</button>
+                </a>
+            </div>
+        </div>
+        <?php endif; ?>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" 
+        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" 
+        crossorigin="anonymous"></script>
+</body>
+</html>

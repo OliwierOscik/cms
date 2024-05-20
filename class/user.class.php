@@ -18,6 +18,11 @@ class User {
         $this->email = $email;
     }
 
+     //getery:
+     public function getEmail() : string {
+        return $this->email;
+    }
+
     public static function Register(string $email,string $password) : bool {
         // funkcja rejstruje nowego uzytkownika do bazy
         //funkcja zwraca true jesli sie udalo lub false jesli nie udalo sie
@@ -33,32 +38,65 @@ class User {
     public static function Login(string $email, string $password) : bool {
         //funkcja loguje istniejacego uzytkownika do bazy
         //funkcja zwraca false jesli uzytkownika o takim hasle nie istnieje
-        $db = new mysqli('localhost' , 'root' , '' , 'bazazcms');
+        $db = new mysqli('localhost', 'root', '', 'cms');
         $sql = "SELECT * FROM user WHERE email = ? LIMIT 1";
         $q = $db->prepare($sql);
-        $q->bind_param("s" , $email);
+        $q->bind_param("s", $email);
         $q->execute();
         $result = $q->get_result();
         $row = $result->fetch_assoc();
-        $id = $row['id'];
-        $passwordHash = $row['passwordHash'];
+        //tu muszą się nazwy w nawiasach [] zgadzać z nazwą kolumny w bazie danych
+        $id = $row['ID'];
+        $passwordHash = $row['password'];
         if(password_verify($password, $passwordHash)) {
-            //hasło sie zgadza
-            //zapisz dane uzytkownika do sesji
+            //hasło się zgadza
+            //zapisz dane użytkownika do sesji
             $user = new User($id, $email);
-            $_SESSION['user_id'] = $id;
+            $_SESSION['user'] = $user;
             return true;
-
         } else {
-            //hasło sie nie zgadza 
+            //hasło się nie zgadza
             return false;
         }
     }
 
+    public static function isLogged() {
+        if(isset($_SESSION['user']))
+            return true;
+        else 
+            return false;
+    }
+
     public function Logout() {
         //funkcja wylogowuje uzytkownika
+        session_destroy();
 
+    }
 
+    public function ChangePassword(string $oldPassword, string $newPassword) : bool  {
+        //ta funkcja ma zaktualizować hasło użytkownika w bazie danych
+        //wyciągnij hash hasła z bazy danych
+        $db = new mysqli("localhost", "root", "", "cms");
+        $sql = "SELECT password FROM USER WHERE user.ID = ?";
+        $q = $db->prepare($sql);
+        $q->bind_param("i", $this->id);
+        $q->execute();
+        //$result to jest mysqli_result
+        $result = $q->get_result();
+        $row = $result->fetch_assoc();
+        $oldPasswordHash = $row['password'];
+
+        if(password_verify($oldPassword, $oldPasswordHash)){
+            //użytkownik wprowadził poprawne _stare_ hasło
+            $newPasswordHash = password_hash($newPassword, PASSWORD_ARGON2I);
+            $sql = "UPDATE user SET password = ? WHERE user.ID = ?";
+            $q = $db->prepare($sql);
+            $q->bind_param("si", $newPasswordHash, $this->id);
+            $result = $q->execute();
+            return $result;
+        } else {
+            return false;
+        }
     }
 }
 
